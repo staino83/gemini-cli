@@ -286,11 +286,8 @@ describe('ShellExecutionService', () => {
       });
 
       expect(mockPtySpawn).toHaveBeenCalledWith(
-        'bash',
-        [
-          '-c',
-          'shopt -u promptvars nullglob extglob nocaseglob dotglob; ls -l',
-        ],
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-Command', 'ls -l'],
         expect.any(Object),
       );
       expect(result.exitCode).toBe(0);
@@ -939,23 +936,20 @@ describe('ShellExecutionService', () => {
 
       expect(mockPtySpawn).toHaveBeenCalledWith(
         'powershell.exe',
-        ['-NoProfile', '-Command', 'dir "foo bar"'],
+        ['-NoProfile', '-NonInteractive', '-Command', 'dir "foo bar"'],
         expect.any(Object),
       );
     });
 
-    it('should use bash on Linux', async () => {
+    it('should still use PowerShell on Linux in this fork', async () => {
       mockPlatform.mockReturnValue('linux');
       await simulateExecution('ls "foo bar"', (pty) =>
         pty.onExit.mock.calls[0][0]({ exitCode: 0, signal: null }),
       );
 
       expect(mockPtySpawn).toHaveBeenCalledWith(
-        'bash',
-        [
-          '-c',
-          'shopt -u promptvars nullglob extglob nocaseglob dotglob; ls "foo bar"',
-        ],
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-Command', 'ls "foo bar"'],
         expect.any(Object),
       );
     });
@@ -1205,11 +1199,8 @@ describe('ShellExecutionService child_process fallback', () => {
       });
 
       expect(mockCpSpawn).toHaveBeenCalledWith(
-        'bash',
-        [
-          '-c',
-          'shopt -u promptvars nullglob extglob nocaseglob dotglob; ls -l',
-        ],
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-Command', 'ls -l'],
         expect.objectContaining({ shell: false, detached: true }),
       );
       expect(result.exitCode).toBe(0);
@@ -1524,7 +1515,7 @@ describe('ShellExecutionService child_process fallback', () => {
 
       expect(mockCpSpawn).toHaveBeenCalledWith(
         'powershell.exe',
-        ['-NoProfile', '-Command', 'dir "foo bar"'],
+        ['-NoProfile', '-NonInteractive', '-Command', 'dir "foo bar"'],
         expect.objectContaining({
           shell: false,
           detached: false,
@@ -1548,10 +1539,11 @@ describe('ShellExecutionService child_process fallback', () => {
 
       expect(mockCpSpawn).toHaveBeenCalledWith(
         'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
-        ['-NoProfile', '-Command', 'dir "foo bar"'],
+        ['-NoProfile', '-NonInteractive', '-Command', 'dir "foo bar"'],
         expect.objectContaining({
           shell: false,
           detached: false,
+          windowsVerbatimArguments: false,
         }),
       );
     });
@@ -1560,40 +1552,32 @@ describe('ShellExecutionService child_process fallback', () => {
       mockPlatform.mockReturnValue('win32');
       mockResolveExecutable.mockResolvedValue(undefined);
 
-      await expect(
-        ShellExecutionService.execute(
-          'dir',
-          '/test/dir',
-          onOutputEventMock,
-          new AbortController().signal,
-          false,
-          shellExecutionConfig,
-        ),
-      ).rejects.toThrow(FatalSandboxError);
-      await expect(
-        ShellExecutionService.execute(
-          'dir',
-          '/test/dir',
-          onOutputEventMock,
-          new AbortController().signal,
-          false,
-          shellExecutionConfig,
-        ),
-      ).rejects.toThrow('PowerShell is required on Windows');
+      const handle = await ShellExecutionService.execute(
+        'dir',
+        '/test/dir',
+        onOutputEventMock,
+        new AbortController().signal,
+        false,
+        shellExecutionConfig,
+      );
+
+      await expect(handle.result).resolves.toEqual(
+        expect.objectContaining({
+          exitCode: 1,
+          error: expect.any(FatalSandboxError),
+        }),
+      );
     });
 
-    it('should use bash and detached process group on Linux', async () => {
+    it('should keep PowerShell and detached process group semantics on Linux in this fork', async () => {
       mockPlatform.mockReturnValue('linux');
       await simulateExecution('ls "foo bar"', (cp) => {
         cp.emit('exit', 0, null);
       });
 
       expect(mockCpSpawn).toHaveBeenCalledWith(
-        'bash',
-        [
-          '-c',
-          'shopt -u promptvars nullglob extglob nocaseglob dotglob; ls "foo bar"',
-        ],
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-Command', 'ls "foo bar"'],
         expect.objectContaining({
           shell: false,
           detached: true,

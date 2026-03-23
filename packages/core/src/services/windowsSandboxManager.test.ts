@@ -123,7 +123,7 @@ describe('WindowsSandboxManager', () => {
   });
 
   it('should fail when low integrity access cannot be granted', async () => {
-    mockSpawnAsync.mockRejectedValueOnce(new Error('icacls failed'));
+    mockSpawnAsync.mockRejectedValue(new Error('icacls failed'));
     const manager = new WindowsSandboxManager('win32');
 
     await expect(manager.prepareCommand(baseRequest)).rejects.toThrow(
