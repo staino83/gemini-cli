@@ -35,6 +35,11 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
+if (process.platform !== 'win32') {
+  writeToStderr('Error: This fork of Gemini CLI only supports Windows.\n');
+  process.exit(1);
+}
+
 main().catch(async (error) => {
   // Set a timeout to force exit if cleanup hangs
   const cleanupTimeout = setTimeout(() => {
