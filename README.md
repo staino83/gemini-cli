@@ -48,18 +48,6 @@ npx @google/gemini-cli
 npm install -g @google/gemini-cli
 ```
 
-#### Install globally with Homebrew (macOS/Linux)
-
-```bash
-brew install gemini-cli
-```
-
-#### Install globally with MacPorts (macOS)
-
-```bash
-sudo port install gemini-cli
-```
-
 #### Install with Anaconda (for restricted environments)
 
 ```bash
@@ -145,7 +133,7 @@ Integrate Gemini CLI directly into your GitHub workflows with
 
 ## 🔐 Authentication Options
 
-Choose the authentication method that best fits your needs:
+Choose the authentication method that best fits your needs on Windows:
 
 ### Option 1: Sign in with Google (OAuth login using your Google Account)
 

@@ -76,8 +76,8 @@ describe('Core System Prompt (prompts.ts)', () => {
   let mockConfig: Config;
   beforeEach(() => {
     vi.resetAllMocks();
-    // Stub process.platform to 'linux' by default for deterministic snapshots across OSes
-    mockPlatform('linux');
+    // Stub process.platform to Windows for deterministic snapshots in the Windows-only fork.
+    mockPlatform('win32');
 
     vi.stubEnv('SANDBOX', undefined);
     vi.stubEnv('GEMINI_SYSTEM_MD', undefined);
@@ -345,12 +345,16 @@ describe('Core System Prompt (prompts.ts)', () => {
   });
 
   it.each([
-    ['true', '# Sandbox', ['# macOS Seatbelt', '# Outside of Sandbox']],
-    ['sandbox-exec', '# macOS Seatbelt', ['# Sandbox', '# Outside of Sandbox']],
+    ['true', '# Windows Native Sandbox', ['# Sandbox', '# Outside of Sandbox']],
+    [
+      'sandbox-exec',
+      '# Windows Native Sandbox',
+      ['# Sandbox', '# Outside of Sandbox'],
+    ],
     [
       undefined,
       'You are Gemini CLI, an interactive CLI agent',
-      ['# Sandbox', '# macOS Seatbelt'],
+      ['# Sandbox', '# Windows Native Sandbox'],
     ],
   ])(
     'should include correct sandbox instructions for SANDBOX=%s',

@@ -1378,9 +1378,8 @@ const SETTINGS_SCHEMA = {
         default: undefined as boolean | string | SandboxConfig | undefined,
         ref: 'BooleanOrStringOrObject',
         description: oneLine`
-          Legacy full-process sandbox execution environment.
-          Set to a boolean to enable or disable the sandbox, provide a string path to a sandbox profile,
-          or specify an explicit sandbox command (e.g., "docker", "podman", "lxc", "windows-native").
+          Legacy sandbox execution environment for this Windows-only fork.
+          Set to a boolean to enable or disable sandboxing, or specify the explicit sandbox command "windows-native".
         `,
         showInDialog: false,
       },

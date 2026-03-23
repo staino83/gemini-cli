@@ -545,32 +545,26 @@ export function parseCommandDetails(
  * @returns The ShellConfiguration for the current environment.
  */
 export function getShellConfiguration(): ShellConfiguration {
-  if (isWindows()) {
-    const comSpec = process.env['ComSpec'];
-    if (comSpec) {
-      const executable = comSpec.toLowerCase();
-      if (
-        executable.endsWith('powershell.exe') ||
-        executable.endsWith('pwsh.exe')
-      ) {
-        return {
-          executable: comSpec,
-          argsPrefix: ['-NoProfile', '-Command'],
-          shell: 'powershell',
-        };
-      }
+  const comSpec = process.env['ComSpec'];
+  if (comSpec) {
+    const executable = comSpec.toLowerCase();
+    if (
+      executable.endsWith('powershell.exe') ||
+      executable.endsWith('pwsh.exe')
+    ) {
+      return {
+        executable: comSpec,
+        argsPrefix: ['-NoProfile', '-NonInteractive', '-Command'],
+        shell: 'powershell',
+      };
     }
-
-    // Default to PowerShell for all other Windows configurations.
-    return {
-      executable: 'powershell.exe',
-      argsPrefix: ['-NoProfile', '-Command'],
-      shell: 'powershell',
-    };
   }
 
-  // Unix-like systems (Linux, macOS)
-  return { executable: 'bash', argsPrefix: ['-c'], shell: 'bash' };
+  return {
+    executable: 'powershell.exe',
+    argsPrefix: ['-NoProfile', '-NonInteractive', '-Command'],
+    shell: 'powershell',
+  };
 }
 
 /**

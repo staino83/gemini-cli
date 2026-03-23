@@ -404,20 +404,28 @@ describe('getShellConfiguration', () => {
     process.env = originalEnv;
   });
 
-  it('should return bash configuration on Linux', () => {
+  it('should return PowerShell configuration on Linux', () => {
     mockPlatform.mockReturnValue('linux');
     const config = getShellConfiguration();
-    expect(config.executable).toBe('bash');
-    expect(config.argsPrefix).toEqual(['-c']);
-    expect(config.shell).toBe('bash');
+    expect(config.executable).toBe('powershell.exe');
+    expect(config.argsPrefix).toEqual([
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+    ]);
+    expect(config.shell).toBe('powershell');
   });
 
-  it('should return bash configuration on macOS (darwin)', () => {
+  it('should return PowerShell configuration on macOS (darwin)', () => {
     mockPlatform.mockReturnValue('darwin');
     const config = getShellConfiguration();
-    expect(config.executable).toBe('bash');
-    expect(config.argsPrefix).toEqual(['-c']);
-    expect(config.shell).toBe('bash');
+    expect(config.executable).toBe('powershell.exe');
+    expect(config.argsPrefix).toEqual([
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+    ]);
+    expect(config.shell).toBe('powershell');
   });
 
   describe('on Windows', () => {
@@ -429,7 +437,11 @@ describe('getShellConfiguration', () => {
       delete process.env['ComSpec'];
       const config = getShellConfiguration();
       expect(config.executable).toBe('powershell.exe');
-      expect(config.argsPrefix).toEqual(['-NoProfile', '-Command']);
+      expect(config.argsPrefix).toEqual([
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+      ]);
       expect(config.shell).toBe('powershell');
     });
 
@@ -438,7 +450,11 @@ describe('getShellConfiguration', () => {
       process.env['ComSpec'] = cmdPath;
       const config = getShellConfiguration();
       expect(config.executable).toBe('powershell.exe');
-      expect(config.argsPrefix).toEqual(['-NoProfile', '-Command']);
+      expect(config.argsPrefix).toEqual([
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+      ]);
       expect(config.shell).toBe('powershell');
     });
 
@@ -448,7 +464,11 @@ describe('getShellConfiguration', () => {
       process.env['ComSpec'] = psPath;
       const config = getShellConfiguration();
       expect(config.executable).toBe(psPath);
-      expect(config.argsPrefix).toEqual(['-NoProfile', '-Command']);
+      expect(config.argsPrefix).toEqual([
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+      ]);
       expect(config.shell).toBe('powershell');
     });
 
@@ -457,7 +477,11 @@ describe('getShellConfiguration', () => {
       process.env['ComSpec'] = pwshPath;
       const config = getShellConfiguration();
       expect(config.executable).toBe(pwshPath);
-      expect(config.argsPrefix).toEqual(['-NoProfile', '-Command']);
+      expect(config.argsPrefix).toEqual([
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+      ]);
       expect(config.shell).toBe('powershell');
     });
 
@@ -465,7 +489,11 @@ describe('getShellConfiguration', () => {
       process.env['ComSpec'] = 'C:\\Path\\To\\POWERSHELL.EXE';
       const config = getShellConfiguration();
       expect(config.executable).toBe('C:\\Path\\To\\POWERSHELL.EXE');
-      expect(config.argsPrefix).toEqual(['-NoProfile', '-Command']);
+      expect(config.argsPrefix).toEqual([
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+      ]);
       expect(config.shell).toBe('powershell');
     });
   });

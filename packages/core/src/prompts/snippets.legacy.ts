@@ -70,7 +70,7 @@ export interface OperationalGuidelinesOptions {
   memoryManagerEnabled: boolean;
 }
 
-export type SandboxMode = 'macos-seatbelt' | 'generic' | 'outside';
+export type SandboxMode = 'windows-native' | 'generic' | 'outside';
 
 export interface GitRepoOptions {
   interactive: boolean;
@@ -292,10 +292,10 @@ ${shellEfficiencyGuidelines(options.enableShellEfficiency)}
 
 export function renderSandbox(mode?: SandboxMode): string {
   if (!mode) return '';
-  if (mode === 'macos-seatbelt') {
+  if (mode === 'windows-native') {
     return `
-# macOS Seatbelt
-You are running under macos seatbelt with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to macOS Seatbelt (e.g. if a command fails with 'Operation not permitted' or similar error), as you report the error to the user, also explain why you think it could be due to macOS Seatbelt, and how the user may need to adjust their Seatbelt profile.`.trim();
+    # Windows Native Sandbox
+    You are running with Gemini CLI's Windows-native sandbox restrictions. Access to files outside the project directory or approved paths may be limited, and host resources such as networking may be restricted. If a command fails because of sandboxing, explain that the Windows sandbox policy is the likely cause and describe which sandbox settings may need to be adjusted.`.trim();
   } else if (mode === 'generic') {
     return `
 # Sandbox
@@ -339,7 +339,7 @@ export function renderGitRepo(options?: GitRepoOptions): string {
   - \`git diff HEAD\` to review all changes (including unstaged changes) to tracked files in work tree since last commit.
     - \`git diff --staged\` to review only staged changes when a partial commit makes sense or was requested by the user.
   - \`git log -n 3\` to review recent commit messages and match their style (verbosity, formatting, signature line, etc.)
-- Combine shell commands whenever possible to save time/steps, e.g. \`git status && git diff HEAD && git log -n 3\`.
+- Combine shell commands whenever possible to save time/steps, e.g. \`git status; git diff HEAD; git log -n 3\`.
 - Always propose a draft commit message. Never just ask the user to give you the full commit message.
 - Prefer commit messages that are clear, concise, and focused more on "why" and less on "what".${gitRepoKeepUserInformed(options.interactive)}
 - After each commit, confirm that it was successful by running \`git status\`.

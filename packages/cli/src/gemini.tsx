@@ -186,6 +186,11 @@ export async function startInteractiveUI(
 export async function main() {
   const cliStartupHandle = startupProfiler.start('cli_startup');
 
+  if (os.platform() !== 'win32') {
+    writeToStderr('Error: This fork of Gemini CLI only supports Windows.\n');
+    process.exit(ExitCodes.FATAL_INPUT_ERROR);
+  }
+
   // Listen for admin controls from parent process (IPC) in non-sandbox mode. In
   // sandbox mode, we re-fetch the admin controls from the server once we enter
   // the sandbox.

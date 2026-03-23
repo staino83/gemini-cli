@@ -6,14 +6,12 @@ installation methods, and release types.
 ## Recommended system specifications
 
 - **Operating System:**
-  - macOS 15+
   - Windows 11 24H2+
-  - Ubuntu 20.04+
 - **Hardware:**
   - "Casual" usage: 4GB+ RAM (short sessions, common tasks and edits)
   - "Power" usage: 16GB+ RAM (long sessions, large codebases, deep context)
 - **Runtime:** Node.js 20.0.0+
-- **Shell:** Bash, Zsh, or PowerShell
+- **Shell:** PowerShell
 - **Location:**
   [Gemini Code Assist supported locations](https://developers.google.com/gemini-code-assist/resources/available-locations#americas)
 - **Internet connection required**
@@ -24,8 +22,6 @@ We recommend most users install Gemini CLI using one of the following
 installation methods:
 
 - npm
-- Homebrew
-- MacPorts
 - Anaconda
 
 Note that Gemini CLI comes pre-installed on
@@ -36,18 +32,6 @@ Note that Gemini CLI comes pre-installed on
 
 ```bash
 npm install -g @google/gemini-cli
-```
-
-### Install globally with Homebrew (macOS/Linux)
-
-```bash
-brew install gemini-cli
-```
-
-### Install globally with MacPorts (macOS)
-
-```bash
-sudo port install gemini-cli
 ```
 
 ### Install with Anaconda (for restricted environments)
@@ -92,24 +76,14 @@ helpful for testing features still in development:
 npx https://github.com/google-gemini/gemini-cli
 ```
 
-### Run in a sandbox (Docker/Podman)
+### Run in the Windows native sandbox
 
-For security and isolation, Gemini CLI can be run inside a container. This is
-the default way that the CLI executes tools that might have side effects.
+For security and isolation, this fork uses the built-in Windows sandbox path for
+tool execution. Enable it with:
 
-- **Directly from the registry:** You can run the published sandbox image
-  directly. This is useful for environments where you only have Docker and want
-  to run the CLI.
-  ```bash
-  # Run the published sandbox image
-  docker run --rm -it us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.1
-  ```
-- **Using the `--sandbox` flag:** If you have Gemini CLI installed locally
-  (using the standard installation described above), you can instruct it to run
-  inside the sandbox container.
-  ```bash
-  gemini --sandbox -y -p "your prompt here"
-  ```
+```bash
+gemini --sandbox -y -p "your prompt here"
+```
 
 ### Run from source (recommended for Gemini CLI contributors)
 

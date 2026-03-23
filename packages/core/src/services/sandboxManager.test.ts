@@ -8,8 +8,6 @@ import os from 'node:os';
 import { describe, expect, it, vi } from 'vitest';
 import { NoopSandboxManager } from './sandboxManager.js';
 import { createSandboxManager } from './sandboxManagerFactory.js';
-import { LinuxSandboxManager } from '../sandbox/linux/LinuxSandboxManager.js';
-import { MacOsSandboxManager } from '../sandbox/macos/MacOsSandboxManager.js';
 import { WindowsSandboxManager } from './windowsSandboxManager.js';
 
 describe('NoopSandboxManager', () => {
@@ -123,17 +121,23 @@ describe('createSandboxManager', () => {
     expect(manager).toBeInstanceOf(NoopSandboxManager);
   });
 
-  it.each([
-    { platform: 'linux', expected: LinuxSandboxManager },
-    { platform: 'darwin', expected: MacOsSandboxManager },
-    { platform: 'win32', expected: WindowsSandboxManager },
-  ] as const)(
-    'should return $expected.name if sandboxing is enabled and platform is $platform',
-    ({ platform, expected }) => {
+  it('should return WindowsSandboxManager when sandboxing is enabled on Windows', () => {
+    const osSpy = vi.spyOn(os, 'platform').mockReturnValue('win32');
+    try {
+      const manager = createSandboxManager({ enabled: true }, '/workspace');
+      expect(manager).toBeInstanceOf(WindowsSandboxManager);
+    } finally {
+      osSpy.mockRestore();
+    }
+  });
+
+  it.each(['linux', 'darwin'] as const)(
+    'should return NoopSandboxManager when sandboxing is enabled on %s',
+    (platform) => {
       const osSpy = vi.spyOn(os, 'platform').mockReturnValue(platform);
       try {
         const manager = createSandboxManager({ enabled: true }, '/workspace');
-        expect(manager).toBeInstanceOf(expected);
+        expect(manager).toBeInstanceOf(NoopSandboxManager);
       } finally {
         osSpy.mockRestore();
       }

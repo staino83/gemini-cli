@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { main } from './gemini.js';
 import { debugLogger, type Config } from '@google/gemini-cli-core';
+import os from 'node:os';
 
 vi.mock('@google/gemini-cli-core', async (importOriginal) => {
   const actual =
@@ -171,6 +172,7 @@ vi.mock('./utils/sessionCleanup.js', async (importOriginal) => {
 
 describe('gemini.tsx main function cleanup', () => {
   beforeEach(() => {
+    vi.spyOn(os, 'platform').mockReturnValue('win32');
     vi.clearAllMocks();
     process.env['GEMINI_CLI_NO_RELAUNCH'] = 'true';
   });

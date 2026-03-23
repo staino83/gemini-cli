@@ -9,7 +9,6 @@ import {
   type SandboxConfig,
   FatalSandboxError,
 } from '@google/gemini-cli-core';
-import commandExists from 'command-exists';
 import * as os from 'node:os';
 import type { Settings } from './settings.js';
 import { fileURLToPath } from 'node:url';
@@ -23,14 +22,7 @@ const __dirname = path.dirname(__filename);
 interface SandboxCliArgs {
   sandbox?: boolean | string | null;
 }
-const VALID_SANDBOX_COMMANDS = [
-  'docker',
-  'podman',
-  'sandbox-exec',
-  'runsc',
-  'lxc',
-  'windows-native',
-];
+const VALID_SANDBOX_COMMANDS = ['windows-native'];
 
 function isSandboxCommand(
   value: string,
@@ -62,6 +54,12 @@ function getSandboxCommand(
     return '';
   }
 
+  if (os.platform() !== 'win32') {
+    throw new FatalSandboxError(
+      'This fork of Gemini CLI only supports Windows.',
+    );
+  }
+
   if (typeof sandbox === 'string' && sandbox) {
     if (!isSandboxCommand(sandbox)) {
       throw new FatalSandboxError(
@@ -70,57 +68,14 @@ function getSandboxCommand(
         )}`,
       );
     }
-    // runsc (gVisor) is only supported on Linux
-    if (sandbox === 'runsc' && os.platform() !== 'linux') {
-      throw new FatalSandboxError(
-        'gVisor (runsc) sandboxing is only supported on Linux',
-      );
-    }
-    // windows-native is only supported on Windows
-    if (sandbox === 'windows-native' && os.platform() !== 'win32') {
-      throw new FatalSandboxError(
-        'Windows native sandboxing is only supported on Windows',
-      );
-    }
-
-    // confirm that specified command exists (unless it's built-in)
-    if (sandbox !== 'windows-native' && !commandExists.sync(sandbox)) {
-      throw new FatalSandboxError(
-        `Missing sandbox command '${sandbox}' (from GEMINI_SANDBOX)`,
-      );
-    }
-    // runsc uses Docker with --runtime=runsc; both must be available (prioritize runsc when explicitly chosen)
-    if (sandbox === 'runsc' && !commandExists.sync('docker')) {
-      throw new FatalSandboxError(
-        "runsc (gVisor) requires Docker. Install Docker, or use sandbox: 'docker'.",
-      );
-    }
     return sandbox;
   }
 
-  // look for seatbelt, docker, or podman, in that order
-  // for container-based sandboxing, require sandbox to be enabled explicitly
-  // note: runsc is NOT auto-detected, it must be explicitly specified
-  if (os.platform() === 'darwin' && commandExists.sync('sandbox-exec')) {
-    return 'sandbox-exec';
-  } else if (commandExists.sync('docker') && sandbox === true) {
-    return 'docker';
-  } else if (commandExists.sync('podman') && sandbox === true) {
-    return 'podman';
-  }
-
-  // throw an error if user requested sandbox but no command was found
   if (sandbox === true) {
-    throw new FatalSandboxError(
-      'GEMINI_SANDBOX is true but failed to determine command for sandbox; ' +
-        'install docker or podman or specify command in GEMINI_SANDBOX',
-    );
+    return 'windows-native';
   }
 
   return '';
-  // Note: 'lxc' is intentionally not auto-detected because it requires a
-  // pre-existing, running container managed by the user. Use
-  // GEMINI_SANDBOX=lxc or sandbox: "lxc" in settings to enable it.
 }
 
 export async function loadSandboxConfig(
@@ -157,12 +112,7 @@ export async function loadSandboxConfig(
     customImage ??
     packageJson?.config?.sandboxImageUri;
 
-  const isNative =
-    command === 'windows-native' ||
-    command === 'sandbox-exec' ||
-    command === 'lxc';
-
-  return command && (image || isNative)
+  return command && image && command !== 'windows-native'
     ? { enabled: true, allowedPaths, networkAccess, command, image }
     : undefined;
 }

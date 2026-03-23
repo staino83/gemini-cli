@@ -276,6 +276,7 @@ describe('gemini.tsx main function', () => {
     [];
 
   beforeEach(() => {
+    vi.spyOn(os, 'platform').mockReturnValue('win32');
     // Store and clear sandbox-related env variables to ensure a consistent test environment
     vi.stubEnv('GEMINI_SANDBOX', '');
     vi.stubEnv('SANDBOX', '');
