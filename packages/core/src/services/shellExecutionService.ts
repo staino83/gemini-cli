@@ -368,11 +368,11 @@ export class ShellExecutionService {
     let resolvedExecutable = await resolveExecutable(executable);
     if (!resolvedExecutable && isWindows && shell === 'powershell') {
       resolvedExecutable = await resolveExecutable('pwsh.exe');
-    }
-    if (!resolvedExecutable && isWindows && shell === 'powershell') {
-      throw new FatalSandboxError(
-        'PowerShell is required on Windows, but neither powershell.exe nor pwsh.exe could be found.',
-      );
+      if (!resolvedExecutable) {
+        throw new FatalSandboxError(
+          'PowerShell is required on Windows, but neither powershell.exe nor pwsh.exe could be found.',
+        );
+      }
     }
     resolvedExecutable ??= executable;
 

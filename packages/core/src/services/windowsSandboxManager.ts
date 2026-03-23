@@ -149,19 +149,19 @@ export class WindowsSandboxManager implements SandboxManager {
         'WindowsSandboxManager: Failed to initialize sandbox helper:',
         e,
       );
-    } finally {
-      if (!this.initializationError && !fs.existsSync(this.helperPath)) {
-        this.initializationError = new FatalSandboxError(
-          `Windows sandbox helper is missing at ${this.helperPath}. Restore ${path.basename(this.helperPath)} or disable windows-native sandboxing.`,
-        );
-      }
+    }
 
-      this.initialized = true;
+    if (!this.initializationError && !fs.existsSync(this.helperPath)) {
+      this.initializationError = new FatalSandboxError(
+        `Windows sandbox helper is missing at ${this.helperPath}. Restore ${path.basename(this.helperPath)} or disable windows-native sandboxing.`,
+      );
     }
 
     if (this.initializationError) {
       throw this.initializationError;
     }
+
+    this.initialized = true;
   }
 
   /**
