@@ -40,6 +40,7 @@ import {
   type ExecutionOutputEvent,
   type ExecutionResult,
 } from './executionLifecycleService.js';
+import { FatalSandboxError } from '../utils/errors.js';
 const { Terminal } = pkg;
 
 const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
@@ -364,8 +365,16 @@ export class ShellExecutionService {
       executable = 'cmd.exe';
     }
 
-    const resolvedExecutable =
-      (await resolveExecutable(executable)) ?? executable;
+    let resolvedExecutable = await resolveExecutable(executable);
+    if (!resolvedExecutable && isWindows && shell === 'powershell') {
+      resolvedExecutable = await resolveExecutable('pwsh.exe');
+    }
+    if (!resolvedExecutable && isWindows && shell === 'powershell') {
+      throw new FatalSandboxError(
+        'PowerShell is required on Windows, but neither powershell.exe nor pwsh.exe could be found.',
+      );
+    }
+    resolvedExecutable ??= executable;
 
     const guardedCommand = ensurePromptvarsDisabled(commandToExecute, shell);
     const spawnArgs = [...argsPrefix, guardedCommand];

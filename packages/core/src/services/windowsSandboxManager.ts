@@ -18,6 +18,7 @@ import {
 } from './environmentSanitization.js';
 import { debugLogger } from '../utils/debugLogger.js';
 import { spawnAsync } from '../utils/shell-utils.js';
+import { FatalSandboxError } from '../utils/errors.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,7 @@ export class WindowsSandboxManager implements SandboxManager {
   private readonly platform: string;
   private initialized = false;
   private readonly lowIntegrityCache = new Set<string>();
+  private initializationError: FatalSandboxError | null = null;
 
   constructor(platform: string = process.platform) {
     this.platform = platform;
@@ -39,7 +41,12 @@ export class WindowsSandboxManager implements SandboxManager {
   }
 
   private async ensureInitialized(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      if (this.initializationError) {
+        throw this.initializationError;
+      }
+      return;
+    }
     if (this.platform !== 'win32') {
       this.initialized = true;
       return;
@@ -115,14 +122,16 @@ export class WindowsSandboxManager implements SandboxManager {
           }
 
           if (!compiled) {
-            debugLogger.log(
-              'WindowsSandboxManager: Failed to compile sandbox helper from any known CSC path.',
+            this.initializationError = new FatalSandboxError(
+              `Windows sandbox helper is unavailable. Failed to compile ${path.basename(this.helperPath)} from ${sourcePath}. Install the C# compiler (csc.exe) or disable windows-native sandboxing.`,
             );
+            debugLogger.log(this.initializationError.message);
           }
         } else {
-          debugLogger.log(
-            `WindowsSandboxManager: Source file not found at ${sourcePath}. Cannot compile helper.`,
+          this.initializationError = new FatalSandboxError(
+            `Windows sandbox helper source is missing at ${sourcePath}. Restore the helper source or disable windows-native sandboxing.`,
           );
+          debugLogger.log(this.initializationError.message);
         }
       } else {
         debugLogger.log(
@@ -130,13 +139,29 @@ export class WindowsSandboxManager implements SandboxManager {
         );
       }
     } catch (e) {
+      this.initializationError =
+        e instanceof FatalSandboxError
+          ? e
+          : new FatalSandboxError(
+              `Failed to initialize Windows sandbox helper: ${e instanceof Error ? e.message : String(e)}`,
+            );
       debugLogger.log(
         'WindowsSandboxManager: Failed to initialize sandbox helper:',
         e,
       );
+    } finally {
+      if (!this.initializationError && !fs.existsSync(this.helperPath)) {
+        this.initializationError = new FatalSandboxError(
+          `Windows sandbox helper is missing at ${this.helperPath}. Restore ${path.basename(this.helperPath)} or disable windows-native sandboxing.`,
+        );
+      }
+
+      this.initialized = true;
     }
 
-    this.initialized = true;
+    if (this.initializationError) {
+      throw this.initializationError;
+    }
   }
 
   /**
@@ -222,6 +247,9 @@ export class WindowsSandboxManager implements SandboxManager {
         'WindowsSandboxManager: icacls failed for',
         resolvedPath,
         e,
+      );
+      throw new FatalSandboxError(
+        `Failed to grant Windows sandbox access to ${resolvedPath}. Try running from a writable workspace or disable windows-native sandboxing.`,
       );
     }
   }

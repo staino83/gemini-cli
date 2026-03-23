@@ -25,6 +25,7 @@ import {
 import { NoopSandboxManager } from './sandboxManager.js';
 import { ExecutionLifecycleService } from './executionLifecycleService.js';
 import type { AnsiOutput, AnsiToken } from '../utils/terminalSerializer.js';
+import { FatalSandboxError } from '../utils/errors.js';
 
 // Hoisted Mocks
 const mockPtySpawn = vi.hoisted(() => vi.fn());
@@ -1530,6 +1531,55 @@ describe('ShellExecutionService child_process fallback', () => {
           windowsVerbatimArguments: false,
         }),
       );
+    });
+
+    it('should fall back to pwsh.exe on Windows when powershell.exe is unavailable', async () => {
+      mockPlatform.mockReturnValue('win32');
+      mockResolveExecutable.mockImplementation(async (exe: string) =>
+        exe === 'pwsh.exe'
+          ? 'C:\\Program Files\\PowerShell\\7\\pwsh.exe'
+          : undefined,
+      );
+
+      await simulateExecution('dir "foo bar"', (cp) => {
+        cp.emit('exit', 0, null);
+        cp.emit('close', 0, null);
+      });
+
+      expect(mockCpSpawn).toHaveBeenCalledWith(
+        'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+        ['-NoProfile', '-Command', 'dir "foo bar"'],
+        expect.objectContaining({
+          shell: false,
+          detached: false,
+        }),
+      );
+    });
+
+    it('should fail with a helpful error when no PowerShell executable is available on Windows', async () => {
+      mockPlatform.mockReturnValue('win32');
+      mockResolveExecutable.mockResolvedValue(undefined);
+
+      await expect(
+        ShellExecutionService.execute(
+          'dir',
+          '/test/dir',
+          onOutputEventMock,
+          new AbortController().signal,
+          false,
+          shellExecutionConfig,
+        ),
+      ).rejects.toThrow(FatalSandboxError);
+      await expect(
+        ShellExecutionService.execute(
+          'dir',
+          '/test/dir',
+          onOutputEventMock,
+          new AbortController().signal,
+          false,
+          shellExecutionConfig,
+        ),
+      ).rejects.toThrow('PowerShell is required on Windows');
     });
 
     it('should use bash and detached process group on Linux', async () => {
