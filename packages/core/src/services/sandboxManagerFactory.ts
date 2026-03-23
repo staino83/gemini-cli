@@ -14,10 +14,8 @@ import type { SandboxConfig } from '../config/config.js';
  */
 export function createSandboxManager(
   sandbox: SandboxConfig | undefined,
-  workspace: string,
+  _workspace: string,
 ): SandboxManager {
-  void workspace;
-
   if (
     os.platform() === 'win32' &&
     (sandbox?.enabled || sandbox?.command === 'windows-native')

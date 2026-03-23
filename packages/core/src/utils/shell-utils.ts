@@ -539,8 +539,11 @@ export function parseCommandDetails(
 /**
  * Determines the appropriate shell configuration for the current platform.
  *
- * This ensures we can execute command strings predictably and securely across platforms
- * using the `spawn(executable, [...argsPrefix, commandString], { shell: false })` pattern.
+ * This ensures we can execute command strings predictably and securely for the
+ * Windows-only fork using the
+ * `spawn(executable, [...argsPrefix, commandString], { shell: false })` pattern.
+ * The PowerShell invocation is intentionally non-interactive so background tools
+ * cannot block on prompts.
  *
  * @returns The ShellConfiguration for the current environment.
  */
